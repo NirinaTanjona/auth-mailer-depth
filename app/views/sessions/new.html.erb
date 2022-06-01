@@ -1,0 +1,14 @@
+<%# we pass scope: :user in form option so that params can be namespaced as
+params[:user][:some_value]
+%>
+<%=form_with url: login_path, scope: :user do |form| %>
+  <div>
+    <%= form.label :email %>
+    <%= form.email_field :email, required: true %>
+  </div>
+  <div>
+    <%= form.label :password %>
+    <%= form.password_field :password, required: true %>
+  </div>
+  <%= form.submit "Sign in" %>
+<% end %>
