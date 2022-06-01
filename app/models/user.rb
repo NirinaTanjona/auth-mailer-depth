@@ -34,14 +34,15 @@ class User < ApplicationRecord
     signed_id expires_in: CONFIRMATION_TOKEN_EXPIRATION, purpose: :confirm_email
   end
 
+  def send_confirmation_email!
+    confirmation_token = generate_confirmation_token
+    UserMailer.confirmation(self, confirmation_token).deliver_now
+  end
+
   private
 
   def downcase_email
     self.email = email.downcase
   end
 
-  def send_confirmation_email!
-    confirmation_token = generate_confirmation_token
-    UserMailer.confirmation(self, confirmation_token).deliver_now
-  end
 end
