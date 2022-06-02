@@ -23,6 +23,12 @@ module Authentication
     redirect_to root_path, alert: "You are already logged in." if user_signed_in?
   end
 
+  # authenticate_user method can be called to ensure an anonymous user cannot access a page that requires a user to be logged in.
+  # We'll need this when we build the page allowing a user to edit or delete their profile.
+  def authenticate_user!
+    redirect_to login_path, alert: "You need to login to access this page." unless user_signed_in?
+  end
+
   private
 
   # The current_user methods returns a User and sets it as the user on the Current class we created

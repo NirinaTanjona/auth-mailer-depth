@@ -4,19 +4,29 @@ class User < ApplicationRecord
 
   MAILER_FROM_EMAIL = "no-reply@exemple.com"
 
+  attr_accessor :current_password
+
   # has_secure_password method is added to give us an API to work with the "password_digest"
   has_secure_password
   # we save all emails to the database in downcase format via a before_save callback such that
   # the values are saved in consistant format
   before_save :downcase_email
+  before_save :downcase_unconfirmed_email
 
   #we use URI::MailTo::EMAIL_REGEXP that comes with Ruby to validate the format of the email
   validates :email, format: {with: URI::MailTo::EMAIL_REGEXP}, presence: true, uniqueness: true
+  validates :unconfirmed_email, format: {with: URI::MailTo::EMAIL_REGEXP}, allow_blank: true
 
-  # The confirm method will be called when a user confirms their email address. We still need to
-  # build this feature
+  # The confirm method will be called when a user confirms their email address.
   def confirm!
-    update_columns(confirmed_at: Time.current)
+    if unconfirmed_or_reconfirming?
+      if unconfirmed_email.present?
+        return false unless update(email: unconfirmed_email, unconfirmed_email: nil)
+      end
+      update_columns(confirmed_at: Time.current)
+    else
+      false
+    end
   end
 
   def confirmed?
@@ -49,9 +59,31 @@ class User < ApplicationRecord
     UserMailer.password_reset(self, password_reset_token).deliver_now
   end
 
+  def confirmable_email
+    if unconfirmed_email.present?
+      unconfirmed_email
+    else
+      email
+    end
+  end
+
+  def reconfirming?
+    unconfirmed_email.present?
+  end
+
+  def unconfirmed_or_reconfirming?
+    unconfirmed? || reconfirming?
+  end
+
   private
 
   def downcase_email
     self.email = email.downcase
   end
+
+  def downcase_unconfirmed_email
+    return if unconfirmed_email.nil?
+    self.unconfirmed_email = unconfirmed_email.downcase
+  end
+
 end

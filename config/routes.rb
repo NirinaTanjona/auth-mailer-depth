@@ -5,6 +5,10 @@ Rails.application.routes.draw do
   get "sign-up", to: "users#new"
   post "sign-up", to: "users#create"
 
+  get "account", to: "users#edit"
+  put "account", to: "users#update"
+  delete "account", to: "users#destroy"
+
   # Here we are overriding named routes parameters. The default resource identifier is `:id`
   # so instead of /confirmations/:id
   # we have /confirmations/:confirmation_token
