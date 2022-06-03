@@ -10,5 +10,9 @@ params[:user][:some_value]
     <%= form.label :password %>
     <%= form.password_field :password, required: true %>
   </div>
+  <div>
+    <%= form.label :remember_me %>
+    <%= form.check_box :remember_me %>
+  </div>
   <%= form.submit "Sign in" %>
 <% end %>

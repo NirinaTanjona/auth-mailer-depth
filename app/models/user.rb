@@ -8,6 +8,9 @@ class User < ApplicationRecord
 
   # has_secure_password method is added to give us an API to work with the "password_digest"
   has_secure_password
+  # This ensures that the value for this column will be set when the record is created. This value
+  # will be used later to securely identify the user.
+  has_secure_token :remember_token
   # we save all emails to the database in downcase format via a before_save callback such that
   # the values are saved in consistant format
   before_save :downcase_email

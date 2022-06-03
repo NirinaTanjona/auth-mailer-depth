@@ -26,7 +26,18 @@ module Authentication
   # authenticate_user method can be called to ensure an anonymous user cannot access a page that requires a user to be logged in.
   # We'll need this when we build the page allowing a user to edit or delete their profile.
   def authenticate_user!
+    store_location
     redirect_to login_path, alert: "You need to login to access this page." unless user_signed_in?
+  end
+
+  def forget(user)
+    cookies.delete :remember_token
+    user.regenerate_remember_token
+  end
+
+  def remember(user)
+    user.regenerate_remember_token
+    cookies.permanent.encrypted[:remember_token] = user.remember_token
   end
 
   private
@@ -36,10 +47,22 @@ module Authentication
   # We call before_action filter so that we have access to the current user before each request.
   # We also add this as `helper_method` so that we have access to `current_user` in the view.
   def current_user
-    Current.user ||= session[:current_user_id] && User.find_by(id: session[:current_user_id])
+    Current.user ||= if session[:current_user_id].present?
+      User.find_by(id: session[:current_user_id])
+    elsif cookies.permanent.encrypted[:remember_token].present?
+      User.find_by(remember_token: cookies.permanent.encrypted[:remember_token])
   end
 
   def user_signed_in?
     Current.user.present?
+  end
+
+  # The store_location method stores the request.original_url in the session so it can be retrieve later.
+  # We only do this if the request made was a get request. We also call request.local? to ensure
+  # it was a local request. This prevents redirecting to an external application
+  # We call store_location in the authenticate_user! method so that we can save the path to
+  # the page the user was trying to visit before they were redirected to the login page.
+  def store_location
+    session[:user_return_to] = request.original_url if request.get? && request.local?
   end
 end

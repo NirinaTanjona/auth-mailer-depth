@@ -28,7 +28,7 @@ class UsersController < ApplicationController
     @user = current_user
   end
 
-  def edit
+  def update
     @user = current_user
     if @user.authenticate(params[:user][:current_password])
       if @user.update(update_user_params)
