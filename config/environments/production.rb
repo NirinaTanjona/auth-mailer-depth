@@ -6,6 +6,11 @@ Rails.application.configure do
   # Code is not reloaded between requests.
   config.cache_classes = true
 
+  # We force SSL in production to prevent session hijacking. Even though the session is
+  # encrypted we want to prevent the cookie from being exposed through an insecure
+  # network. If it were exposed, a bad actor could sign in as the victim.
+  config.force_ssl = true
+
   # Eager load code on boot. This eager loads most of Rails and
   # your application in memory, allowing both threaded web servers
   # and those relying on copy on write to perform better.

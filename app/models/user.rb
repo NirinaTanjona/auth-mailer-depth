@@ -4,13 +4,15 @@ class User < ApplicationRecord
 
   MAILER_FROM_EMAIL = "no-reply@exemple.com"
 
+  has_many :active_sessions, dependent: :destroy
+
   attr_accessor :current_password
 
   # has_secure_password method is added to give us an API to work with the "password_digest"
   has_secure_password
   # This ensures that the value for this column will be set when the record is created. This value
   # will be used later to securely identify the user.
-  has_secure_token :remember_token
+  # has_secure_token :remember_token
   # we save all emails to the database in downcase format via a before_save callback such that
   # the values are saved in consistant format
   before_save :downcase_email
@@ -76,6 +78,24 @@ class User < ApplicationRecord
 
   def unconfirmed_or_reconfirming?
     unconfirmed? || reconfirming?
+  end
+
+  # [["email", "john doe"], ["password", "1234"]].to_h => {"email" => "john doe", "password" => "1234" }
+  # Array.to_h.partition => enumeration with key value
+  # map(&:to_h) => change the returned value to hashmap, "&" avoid an "error" for nil in the returned value
+  def self.authenticate_by(attributes)
+    passwords, identifiers = attributes.to_h.partition do |name, value|
+      !has_attribute?(name) && has_attribute?("#{name}_digest")
+    end.map(&:to_h)
+
+    raise ArgumentError, "One or more password arguments are required" if passwords.empty?
+    raise ArgumentError, "One or more finder arguments are required" if identifiers.empty?
+    if (record = find_by(identifiers))
+      record if passwords.count { |name, value| record.public_send(:"authenticate_#{name}", value) } == passwords.size
+    else
+      new(passwords)
+      nil
+    end
   end
 
   private
